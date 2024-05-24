@@ -2153,7 +2153,7 @@ function rcube_webmail() {
         var uid = this.get_single_uid();
 
         if (uid && this.env.contentframe && !this.drag_active) {
-            this.show_message(uid, false, true);
+            this.show_message(uid, null, true);
         } else if (this.env.contentframe) {
             this.show_contentframe(false);
         }
@@ -2706,6 +2706,104 @@ function rcube_webmail() {
         }
     };
 
+    this.showmsgdata = function(data) {
+        console.info({showmsgdata: data});
+        this.unlock_frame();
+        // TODO: Get rid of the iframe for the message so we don't have to inject styles.
+        var win = this.get_frame_window(this.env.contentframe);
+        var body = win.document.body;
+        // Inject styles into the message "window".
+        win.document.head.append(html('link', {rel: "stylesheet", href: "skins/elastic/styles/styles.css?s=123456789"}));
+        body.append(
+            div({id: 'message-header'},
+                h2({class: 'subject'}, data.headers.subject),
+                div({class: 'header'},
+                    div({class: 'header-content'},
+                        div({class: 'header-summary'},
+                            span(
+                                "Von ", // TODO: I18n
+                                span({class: 'addr'},
+                                    a(
+                                        {
+                                            class: 'rcmContactAddress',
+                                            title: data.headers.from.mailto,
+                                            onClick: (_ev)  => { rcmail.command('compose', data.headers.from.string) },
+                                            href: `mailto:${data.headers.from.string}`
+                                        },
+                                        data.headers.from.name || data.headers.from.string
+                                    )
+                                ),
+                                " am ", // TODO: I18n
+                                span({class: 'test-nowrap'}, data.headers.date) // TODO: l10n
+                            )
+                        )
+                    )
+                )
+            )
+        );
+        const leftCol = div({class: 'leftcol'});
+        if (Object.keys(data.attachments).length > 0) {
+            this.env.attachments = {};
+            const attachmentsList = html('ul', {id: 'attachment-list', class: 'attachmentslist'}); 
+            for (id in data.attachments) {
+                const elem = data.attachments[id];
+                this.env.attachments[elem.mime_id] = elem.mimetype;
+                const fileExt = elem.filename.split('.').pop();
+                attachmentsList.append(html('li', {class: `${elem.ctype_primary} ${elem.ctype_secondary} ${fileExt}`},
+                    // TODO: Find a solution to trigger elasic's attachmentmenu_append() – previously this ran on init().
+                    a({
+                        // TODO: Find a better solution how to pass the UID. Previously that wasn't a problem because this code ran twice: once outside the message-iframe, once inside.
+                        onClick: () => { this.env.uid = data.uid, rcmail.command('load-attachment', Number(elem.mime_id)); this.env.uid = null; },
+                        onMouseover: () => { rcube_webmail.long_subject_title_ex(elem) },
+                        href: this.url('get', {_uid: elem.uid, _part: elem.mime_id})
+                      },  
+                        span({class: 'attachment-name'}, elem.filename),
+                        span({class: 'attachment-size'}, `(~ ${elem.size}B)`) // TODO: more exact calculation and adapted units, see rmail_action::message_part_size().
+                    )
+                ));
+            }
+            leftCol.append(attachmentsList);
+        }
+        const msgparts = div({id: 'messagebody'});
+        const rightCol = div({class: 'rightcol'}, div({id: 'message-objects'}), msgparts);
+        for (const part_data of data.parts_data) {
+            // TODO: show a button outside the iframe to toggle the `safe` attribute
+            const urlArgs = {_uid: data.uid, _part: part_data.mime_id, _framed: 1, _safe: Number(data.load_remote_objects)};
+            const iframe = html('iframe', {
+                        sandbox: 'allow-same-origin', // We have to allow this one, because we need cookies to be sent to with requests to fetch images. DO NOT ADD 'allow-scripts' UNDER ANY CIRCUMSTANCE.
+                        style: 'width: 100%; ', // TODO: move styling into a css file
+                        class: 'message-part',
+                        id: `msgpart-${data.uid}-${part_data.mime_id}`,
+                        src: this.url('get', urlArgs)
+                    });
+            const isHtml = part_data.mimetype == 'text/html'
+            if (isHtml && part_data.has_remote_objects) {
+                const initialButtonText = (data.load_remote_objects ? 'Deny' : 'Allow');
+                msgparts.append(
+                    div({class: 'rcmail-inline-message rcmail-inline-warning'},
+                        span('To protect your privacy remote resources have been blocked.'), // TODO: change text when button is clicked
+                        p({class: 'rcmail-inline-buttons'},
+                            html('button', {onClick: (event) => {
+                                if (urlArgs._safe === 0) {
+                                    urlArgs._safe = 1;
+                                    event.target.textContent = 'Deny';
+                                } else {
+                                    urlArgs._safe = 0;
+                                    event.target.textContent = 'Allow';
+                                }
+                                iframe.src = this.url('get', urlArgs);
+                            }}, initialButtonText),
+                        )
+                    )
+                );
+            }
+            msgparts.append(iframe);
+        }
+        body.append(div({class: 'message-content'}, leftCol, rightCol));
+    }
+
+    // globalThis.jsoniframe = true;
+
     // when user double-clicks on a row
     this.show_message = function (id, safe, preview) {
         if (!id) {
@@ -2716,6 +2814,24 @@ function rcube_webmail() {
             url = this.params_from_uid(id, { _caps: this.browser_capabilities() });
 
         if (preview && (win = this.get_frame_window(this.env.contentframe))) {
+            if (globalThis.jsoniframe === true) {
+                // Get rid of the blurring overlay. TODO: find a better way.
+                win.frameElement.src = '';
+                // Show a loading animation, in case of slow network.
+                this.lock_frame(win);
+                const urlArgs = {_uid: id};
+                if (safe === true) {
+                    urlArgs._safe = 1;
+                } else if (safe === false) {
+                    urlArgs._safe = 0;
+                }
+                this.http_request("getmsgdata", urlArgs);
+                Array.from(win.document.body.children).forEach(function(elem) {
+                    elem.remove();
+                });
+                return;
+            }
+
             target = win;
             url._framed = 1;
         }
@@ -9671,6 +9787,9 @@ function rcube_webmail() {
                 }
 
                 break;
+            case 'getmsgdata':
+                this.showmsgdata(response.data);
+                break;
             case 'refresh':
             case 'check-recent':
                 // update message flags
@@ -10700,3 +10819,41 @@ rcube_webmail.prototype.get_cookie = getCookie;
 rcube_webmail.prototype.addEventListener = rcube_event_engine.prototype.addEventListener;
 rcube_webmail.prototype.removeEventListener = rcube_event_engine.prototype.removeEventListener;
 rcube_webmail.prototype.triggerEvent = rcube_event_engine.prototype.triggerEvent;
+
+const html = (type, ...args) => {
+    args = args.flat()
+    let content
+    let attributes
+    const elem = document.createElement(type)
+    if (args[0]?.constructor?.name === 'Object') {
+      attributes = args.shift()
+      for (const [key, value] of Object.entries(attributes)) {
+        if (key.slice(0, 2) === "on" && typeof(value) === "function") {
+          const eventName = key.slice(2).toLowerCase();
+          elem.addEventListener(eventName, value);
+        } else {
+          elem.setAttribute(key, value)
+        }
+      }
+    }
+    content = args
+    if (content?.constructor?.name !== 'Array') {
+      content = [content]
+    }
+    for (const thing of content) {
+      if (thing) {
+        if (typeof(thing) === 'string') {
+          elem.append(document.createTextNode(thing))
+        } else if (thing.nodeName) {
+          elem.append(thing)
+        }
+      }
+    }
+    return elem
+  }
+const h2 = (...args) => html('h2', ...args)
+const h3 = (...args) => html('h3', ...args)
+const div = (...args) => html('div', ...args)
+const span = (...args) => html('span', ...args)
+const p = (...args) => html('p', ...args)
+const a = (...args) => html('a', ...args)
