@@ -24,6 +24,7 @@
 class rcmail_output_json extends rcmail_output
 {
     protected $texts = [];
+    protected $data = [];
     protected $commands = [];
     protected $callbacks = [];
     protected $message;
@@ -117,6 +118,14 @@ class rcmail_output_json extends rcmail_output
         foreach ($args as $name) {
             $this->texts[$name] = $this->app->gettext($name);
         }
+    }
+
+    /**
+     * Add (JSON-able) data that gets sent to the client.
+     */
+    public function add_data(array $data): void
+    {
+        $this->data = array_merge($this->data, $data);
     }
 
     /**
@@ -230,6 +239,8 @@ class rcmail_output_json extends rcmail_output
         if (!empty($this->texts)) {
             $response['texts'] = $this->texts;
         }
+
+        $response['data'] = (array) $this->data;
 
         // send function calls
         $response['exec'] = $this->get_js_commands() . $add;
