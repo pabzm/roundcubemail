@@ -246,7 +246,7 @@ class rcmail_action_mail_get extends rcmail_action_mail_index
                     );
                 } else {
                     // render HTML body
-                    $out = $attachment->html();
+                    $out = $attachment->html(['blocked_src' => $rcmail->output->asset_url('program/resources/blocked.gif')]);
 
                     // insert remote objects warning into HTML body
                     if (self::$REMOTE_OBJECTS) {
