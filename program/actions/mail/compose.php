@@ -986,6 +986,7 @@ class rcmail_action_mail_compose extends rcmail_action_mail_index
             'safe' => self::$MESSAGE->is_safe,
             'plain' => false,
             'css_prefix' => 'v' . $part_no,
+            'blocked_src' => $rcmail->output->asset_url('program/resources/blocked.gif'),
         ];
 
         // remove comments (produced by washtml)

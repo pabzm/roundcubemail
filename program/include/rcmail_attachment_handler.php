@@ -293,8 +293,10 @@ class rcmail_attachment_handler
 
     /**
      * Returns formatted HTML if the attachment is HTML
+     *
+     * @param Array Options to pass on to wash_html()
      */
-    public function html()
+    public function html(Array $html_wash_options=[]): string
     {
         [$type, $subtype] = explode('/', $this->mimetype);
         $part = (object) [
@@ -309,7 +311,11 @@ class rcmail_attachment_handler
         // show images?
         $is_safe = $this->is_safe();
 
-        return rcmail_action_mail_index::wash_html($body, ['safe' => $is_safe, 'inline_html' => false]);
+        $html_wash_options += [
+            'safe' => $is_safe,
+            'inline_html' => false,
+        ];
+        return rcmail_action_mail_index::wash_html($body, $html_wash_options);
     }
 
     /**

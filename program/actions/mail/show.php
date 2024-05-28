@@ -703,6 +703,7 @@ class rcmail_action_mail_show extends rcmail_action_mail_index
                         'body_class' => 'rcmBody',
                         'container_id' => $container_id,
                         'container_attrib' => $container_attrib,
+                        'blocked_src' => $rcmail->output->asset_url('program/resources/blocked.gif'),
                     ];
 
                     // Parse the part content for display

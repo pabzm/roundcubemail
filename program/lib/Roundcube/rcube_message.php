@@ -56,7 +56,7 @@ class rcube_message
      *
      * @var array
      */
-    protected $replacement_references = null;
+    protected $replacement_references;
 
     public $uid;
     public $folder;
@@ -577,7 +577,7 @@ class rcube_message
         return false;
     }
 
-    public function get_replacement_references(): Array
+    public function get_replacement_references(): array
     {
         if ($this->replacement_references === null) {
             $this->replacement_references = [];

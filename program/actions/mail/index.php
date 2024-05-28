@@ -913,7 +913,13 @@ class rcmail_action_mail_index extends rcmail_action
     {
         $rcmail = rcmail::get_instance();
 
-        $p += ['safe' => false, 'inline_html' => true, 'css_prefix' => null, 'container_id' => null];
+        $p += [
+            'safe' => false,
+            'inline_html' => true,
+            'css_prefix' => null,
+            'container_id' => null,
+            'blocked_src' => '/nonexistent'
+        ];
 
         // charset was converted to UTF-8 in rcube_storage::get_message_part(),
         // change/add charset specification in HTML accordingly,
@@ -938,7 +944,7 @@ class rcmail_action_mail_index extends rcmail_action
         $wash_opts = [
             'show_washed' => false,
             'allow_remote' => $p['safe'],
-            'blocked_src' => $rcmail->output->asset_url('program/resources/blocked.gif'),
+            'blocked_src' => $p['blocked_src'],
             'charset' => RCUBE_CHARSET,
             'cid_map' => $cid_replaces,
             'html_elements' => ['body'],
