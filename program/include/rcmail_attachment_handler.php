@@ -320,7 +320,7 @@ class rcmail_attachment_handler
             'safe' => $is_safe,
             'inline_html' => false,
         ];
-        return rcmail_action_mail_index::wash_html($body, $html_wash_options);
+        return rcmail_action_mail_index::wash_html($body, $html_wash_options, $this->part->replaces);
     }
 
     /**
