@@ -50,6 +50,14 @@ class rcube_message
     protected $got_html_part = false;
     protected $tnef_decode = false;
 
+    /**
+     * This holds a list of Content-IDs and Content-Locations by which parts of
+     * this message are referenced (e.g. in HTML parts).
+     *
+     * @var array
+     */
+    protected $replacement_references = null;
+
     public $uid;
     public $folder;
     public $headers;
@@ -567,6 +575,44 @@ class rcube_message
         }
 
         return false;
+    }
+
+    public function get_replacement_references(): Array
+    {
+        if ($this->replacement_references === null) {
+            $this->replacement_references = [];
+            foreach ($this->mime_parts as $mime_part) {
+                foreach ($mime_part->replaces as $key => $value) {
+                    $this->replacement_references[] = preg_replace('/^cid:/', '', $key);
+                }
+            }
+        }
+        return $this->replacement_references;
+    }
+
+    /**
+     * Checks if part of the message is an attachment (or part of it)
+     *
+     * @param rcube_message_part $part Message part
+     *
+     * @return bool True if the part is an attachment part
+     */
+    public function is_standalone_attachment(rcube_message_part $part): bool
+    {
+        $references = $this->get_replacement_references();
+        // This code is intentionally verbose to keep it comprehensible.
+        // Filter out attachments that are reference by their Content-ID in
+        // another mime-part.
+        if (!empty($part->content_id) && in_array($part->content_id, $references)) {
+            return false;
+        }
+        // Filter out attachments that are reference by their
+        // Content-Location in another mime-part.
+        if (!empty($part->content_location) && in_array($part->content_location, $references)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
