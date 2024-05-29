@@ -92,7 +92,7 @@ class rcube_message
      * @param string $folder  Folder name
      * @param bool   $is_safe Security flag
      */
-    public function __construct($uid, $folder = null, $is_safe = false)
+    public function __construct($uid, $folder = null, $is_safe = null)
     {
         // decode combined UID-folder identifier
         if (preg_match('/^[0-9.]+-.+/', $uid)) {
@@ -123,7 +123,11 @@ class rcube_message
 
         $this->tnef_decode = (bool) $this->app->config->get('tnef_decode', true);
 
-        $this->set_safe($is_safe || !empty($_SESSION['safe_messages'][$this->folder . ':' . $uid]));
+        if (is_bool($is_safe)) {
+            $this->set_safe((bool) $is_safe);
+        } else {
+            $this->set_safe(!empty($_SESSION['safe_messages'][$this->folder . ':' . $uid]));
+        }
         $this->opt = [
             'safe' => $this->is_safe,
             'prefer_html' => $this->app->config->get('prefer_html'),

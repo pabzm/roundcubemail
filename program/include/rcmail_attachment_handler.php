@@ -57,7 +57,12 @@ class rcmail_attachment_handler
         // similar code as in program/steps/mail/show.inc
         if (!empty($uid)) {
             $rcube->config->set('prefer_html', true);
-            $this->message = new rcube_message($uid, null, !empty($_GET['_safe']));
+            if (isset($_GET['_safe'])) {
+                $is_safe = (bool) $_GET['_safe'];
+            } else {
+                $is_safe = null;
+            }
+            $this->message = new rcube_message($uid, null, $is_safe);
             $this->part = $this->message->mime_parts[$part_id] ?? null;
 
             if ($this->part) {
