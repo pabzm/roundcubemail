@@ -689,6 +689,8 @@ function rcube_webmail() {
                 break;
         }
 
+        this.addEventListenersFromElements();
+
         // select first input field in an edit form
         if (this.gui_objects.editform) {
             $('input,select,textarea', this.gui_objects.editform)
@@ -10636,6 +10638,36 @@ function rcube_webmail() {
     this.print_dialog = function () {
         // setTimeout for Safari
         setTimeout('window.print()', 10);
+    };
+
+    /**
+     * Add eventListeners parsed from element datasets. This allows to avoid
+     * inline javascript event handlers (which require a very lax CSP).
+     * Events are to be specified as a comma-separated list of pairs of
+     * event-name + method-to-call.
+     * E.g. with this element:
+     * <a data-rc-event-listener='click:aMethodToCall,dblclick:anotherMethodToCall'>something</a>
+     * A click will cause calling `this[aMethodToCall]`, and a double click
+     * will cause calling this[anotherMethodToCall].
+     * All methods receive the event as only argument.
+     * If you need data inside your method, store it e.g. in other
+     * data-attributes (JSON-serialized, if necessary).
+     */
+    this.addEventListenersFromElements = function () {
+        $('[data-rc-event-listener]').each((_idx, elem) => {
+            elem.dataset.rcEventListener.split(',').forEach((string) => {
+                [eventName, methodName] = string.split(':');
+                if (!methodName) {
+                    this.log("data-event-listener '" + string + "' has invalid value (no method name)");
+                    return;
+                }
+                if (!this[methodName]) {
+                    this.log("'" + methodName + "' is not a valid method name of this class");
+                    return;
+                }
+                elem.addEventListener(eventName, this[methodName]);
+            });
+        });
     };
 } // end object rcube_webmail
 
