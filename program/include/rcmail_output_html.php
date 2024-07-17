@@ -1888,6 +1888,32 @@ class rcmail_output_html extends rcmail_output
     }
 
     /**
+     * Add inline javascript code.
+     * Deprecated! If you need to trigger JavaScript-code from the server use
+     * add_js_call() instead.
+     *
+     * @deprecated
+     *
+     * @param string $script   JS code snippet
+     * @param string $position Target position [head|head_top|foot|docready]
+     */
+    public function add_script($script, $position = 'head')
+    {
+        $trace = debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+        $file = $trace[0]['file'];
+        $line = $trace[0]['line'];
+        $msg = "Deprecated call to add_script() in file '{$file}' on line {$line}";
+        rcube::write_log('deprecations', $msg);
+        @trigger_error($msg, \E_USER_DEPRECATED);
+
+        if (!isset($this->scripts[$position])) {
+            $this->scripts[$position] = rtrim($script);
+        } else {
+            $this->scripts[$position] .= "\n" . rtrim($script);
+        }
+    }
+
+    /**
      * Link an external css file
      *
      * @param string $file File URL
