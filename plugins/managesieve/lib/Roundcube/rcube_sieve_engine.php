@@ -1899,7 +1899,7 @@ class rcube_sieve_engine
             'name' => "_rule_mod[{$id}]",
             'id' => 'rule_mod_op' . $id,
             'class' => 'custom-select',
-            'data-onchange' => json_en(['rule_mod_select', $id]),
+            'data-onchange' => json_encode(['rule_mod_select', $id]),
         ]);
         $select_mod->add(rcube::Q($this->plugin->gettext('none')), '');
         $select_mod->add(rcube::Q($this->plugin->gettext('address')), 'address');
@@ -2148,7 +2148,7 @@ class rcube_sieve_engine
         $out .= html::a([
                 'href' => '#',
                 'id' => "ruledel{$id}",
-                'title' => $del,
+                'title' => $del_title,
                 'data-onclick' => json_encode(['managesieve_ruledel', $id]),
                 'class' => "button delete del " . $rows_num < 2 ? 'disabled' : '',
             ],
