@@ -1342,7 +1342,7 @@ class rcmail_action_mail_index extends rcmail_action
                     $attrib['data-onclick'] = json_encode([
                         'command',
                         'compose',
-                        implode(',', $mailto) . ($url ? "?{$url}" : ''),
+                        rcube::JQ(implode(',', $mailto) . ($url ? "?{$url}" : '')),
                         '__THIS__',
                     ]);
                 } else {
