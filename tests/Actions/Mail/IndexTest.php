@@ -529,7 +529,7 @@ class IndexTest extends ActionTestCase
         $html = \rcmail_action_mail_index::html4inline($body, $params);
 
         $mailto = '<a href="mailto:me@me.com"'
-            . ' data-onclick="' . htmlentities(json_encode(['command', 'compose', 'me@me.com?subject=this is the subject&amp;body=this is the body', '__THIS__'])) . '" rel="noreferrer">e-mail</a>';
+            . ' data-onclick="' . htmlentities(json_encode(['command', 'compose', 'me@me.com?subject=this is the subject&body=this is the body', '__THIS__'])) . '" rel="noreferrer">e-mail</a>';
 
         $this->assertMatchesRegularExpression('|' . preg_quote($mailto, '|') . '|', $html, 'Extended mailto links');
     }
