@@ -1360,7 +1360,7 @@ class rcmail_action_mail_index extends rcmail_action
         }
 
         // allowed attributes for a|link|area tags
-        $allow = ['href', 'name', 'target', 'id', 'class', 'style', 'title',
+        $allow = ['href', 'name', 'target', 'data-onclick', 'id', 'class', 'style', 'title',
             'rel', 'type', 'media', 'alt', 'coords', 'nohref', 'hreflang', 'shape'];
 
         return html::tag($tag, $attrib, $content, $allow);
