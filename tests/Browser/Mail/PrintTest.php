@@ -63,8 +63,10 @@ class PrintTest extends TestCase
                     $browser->assertSee('test10@domain.tld')
                         ->assertDontSee('test11@domain.tld')
                         ->assertSeeIn('a.morelink', '2 more...')
+                        ->screenshot("add-beforemoreclick.png")
                         ->assertElementsCount('span.adr', 10)
                         ->click('a.morelink')
+                        ->screenshot("add-aftermoreclick.png")
                         ->assertElementsCount('span.adr', 12)
                         ->assertSee('test12@domain.tld');
                 });
