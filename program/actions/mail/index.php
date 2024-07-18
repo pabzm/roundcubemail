@@ -1339,7 +1339,7 @@ class rcmail_action_mail_index extends rcmail_action
 
                 if (!empty($addresses)) {
                     $attrib['href'] = 'mailto:' . implode(',', $addresses);
-                    $attrib['data-onclick'] = json_encode([
+                    $attrib['onclick'] = json_encode([
                         'command',
                         'compose',
                         rcube::JQ(implode(',', $mailto) . ($url ? "?{$url}" : '')),
@@ -1360,7 +1360,7 @@ class rcmail_action_mail_index extends rcmail_action
         }
 
         // allowed attributes for a|link|area tags
-        $allow = ['href', 'name', 'target', 'data-onclick', 'id', 'class', 'style', 'title',
+        $allow = ['href', 'name', 'target', 'onclick', 'id', 'class', 'style', 'title',
             'rel', 'type', 'media', 'alt', 'coords', 'nohref', 'hreflang', 'shape'];
 
         return html::tag($tag, $attrib, $content, $allow);
