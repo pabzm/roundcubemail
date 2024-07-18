@@ -2099,14 +2099,14 @@ class rcube_sieve_engine
 
         if (!$compact) {
             $out .= html::tag('td', ['class' => 'advbutton'],
-                html:a([
+                html::a([
                     'href' => '#',
                     'id' => "ruleadv{$id}",
                     'title' => $adv_title,
                     'data-onclick' => json_encode(['rule_adv_switch', $id, '__THIS__']),
-                    'class' => 'show'
+                    'class' => 'show',
                 ],
-                    html:span(['class' => 'inner'], $adv_title)
+                    html::span(['class' => 'inner'], $adv_title)
                 )
             );
         }
@@ -2114,12 +2114,12 @@ class rcube_sieve_engine
         $out .= html::tag('td', ['class' => 'rowactions'],
             html::div(['class' => 'flexbox'], $aout)
         );
-        $out .= html::tag('td', ['class' => 'rowtargets'], [ 
+        $out .= html::tag('td', ['class' => 'rowtargets'], [
             $tout,
             html::div([
                     'id' => "rule_advanced{$id}",
                     'style' => 'display:none',
-                    'class' => 'advanced'
+                    'class' => 'advanced',
                 ],
                 $mout),
         ]);
@@ -2131,7 +2131,7 @@ class rcube_sieve_engine
                     'id' => "ruleadv{$id}",
                     'title' => $adv_title,
                     'data-onclick' => json_encode(['rule_adv_switch', $id, '__THIS__']),
-                    'class' => 'advanced show'
+                    'class' => 'advanced show',
                 ],
                 html::span(['class' => 'inner'], $adv_title)
             );
@@ -2141,7 +2141,7 @@ class rcube_sieve_engine
                 'id' => "ruleadd{$id}",
                 'title' => $add_title,
                 'data-onclick' => json_encode(['managesieve_ruleadd', $id]),
-                'class' => 'button create add'
+                'class' => 'button create add',
             ],
             html::span(['class' => 'inner'], $add_title)
         );
@@ -2150,7 +2150,7 @@ class rcube_sieve_engine
                 'id' => "ruledel{$id}",
                 'title' => $del,
                 'data-onclick' => json_encode(['managesieve_ruledel', $id]),
-                'class' => "button delete del {($rows_num < 2 ? 'disabled' : '')}"
+                'class' => "button delete del " . $rows_num < 2 ? 'disabled' : '',
             ],
             html::span(['class' => 'inner'], $del_title)
         );
