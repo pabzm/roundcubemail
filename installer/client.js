@@ -61,11 +61,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     addOnclickCallback('button-download-config', function () {
-        location.href='index.php?_getconfig=1';
+        location.href = 'index.php?_getconfig=1';
     });
 
     addOnclickCallback('button-continue-step-3', function () {
-        location.href='./index.php?_step=3';
+        location.href = './index.php?_step=3';
     });
 
     addOnclickCallback('remove-host-field', function (event) {
