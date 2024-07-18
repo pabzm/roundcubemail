@@ -15,6 +15,5 @@ rcmail.addEventListener('init', () => {
                 rcube_webmail.long_subject_title_ex(elem, 0);
             });
         }
-
     });
 });
