@@ -2150,7 +2150,7 @@ class rcube_sieve_engine
                 'id' => "ruledel{$id}",
                 'title' => $del_title,
                 'data-onclick' => json_encode(['managesieve_ruledel', $id]),
-                'class' => "button delete del " . $rows_num < 2 ? 'disabled' : '',
+                'class' => 'button delete del ' . $rows_num < 2 ? 'disabled' : '',
             ],
             html::span(['class' => 'inner'], $del_title)
         );
@@ -2705,7 +2705,7 @@ class rcube_sieve_engine
                     'id' => "actionadd{$id}",
                     'title' => $add_label,
                     'data-onclick' => json_encode(['managesieve_actionadd', $id]),
-                    'class' => 'button create add'
+                    'class' => 'button create add',
                 ],
                 html::span(['class' => 'inner'], $add_label),
             ),
