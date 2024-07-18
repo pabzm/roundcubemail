@@ -3,7 +3,7 @@
 // implementation details of those).
 //
 rcube_webmail.prototype.toggle_html_editor = function (event) {
-    this.toggle_editor({html: event.target.checked}, null, event);
+    this.toggle_editor({ html: event.target.checked }, null, event);
 };
 
 rcube_webmail.prototype.toggle_change_subscription = function (elem) {
@@ -36,7 +36,7 @@ rcube_webmail.prototype.hide_and_show_next = function (elem) {
 // rcmail.clear_message_list().
 rcube_webmail.prototype.message_list_clear = function (arg) {
     ref.message_list.clear(arg);
-}
+};
 
 rcube_webmail.prototype.onerror_set_placeholder_src = function (event, src) {
     var elem = event.target;
@@ -45,16 +45,16 @@ rcube_webmail.prototype.onerror_set_placeholder_src = function (event, src) {
         src = this.env.photo_placeholder;
     }
     elem.src = src;
-}
+};
 
 rcube_webmail.prototype.show_sibling_image_attachments = function (elem) {
     $(elem).parents('p.image-attachment').show();
-}
+};
 
 rcube_webmail.prototype.reloadForm = function (elem) {
     this.command('save', 'reload', elem.form);
-}
+};
 
 rcube_webmail.prototype.toggle_html_signature_editor = function (event) {
-    this.toggle_editor({id: 'rcmfd_signature', html: event.target.checked}, null, event);
-}
+    this.toggle_editor({ id: 'rcmfd_signature', html: event.target.checked }, null, event);
+};
