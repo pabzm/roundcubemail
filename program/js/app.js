@@ -10721,7 +10721,7 @@ function rcube_webmail() {
             this.log("data-on-event '" + eventName + "' has invalid value (no method name)");
             return;
         }
-        if (typeof(this[methodName]) !== 'function') {
+        if (typeof this[methodName] !== 'function') {
             this.log("'" + methodName + "' is not a valid method name of this class");
             return;
         }
@@ -10729,18 +10729,16 @@ function rcube_webmail() {
         eventArgs = eventArgs.map(function (arg) {
             if (arg === '__THIS__') {
                 return elem;
-            } else {
-                return arg;
             }
+            return arg;
         });
         elem.addEventListener(eventName, (ev) => {
             // Inject a reference to the event object, if required.
             var localEventArgs = eventArgs.map(function (arg) {
                 if (arg === '__EVENT__') {
                     return ev;
-                } else {
-                    return arg;
                 }
+                return arg;
             });
             this[methodName](...localEventArgs);
         });
@@ -10765,7 +10763,7 @@ function rcube_webmail() {
             'change',
         ].forEach(function (name) {
             ref.addEventListenerFromElements(name);
-        });;
+        });
     };
 } // end object rcube_webmail
 
