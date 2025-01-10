@@ -40,13 +40,50 @@ class MessageRenderingTestCase extends ActionTestCase
      * to be placed as individual files in
      * `tests/src/emails/test@example/Mail/cur/`.
      */
+    protected function runGetActionAndGetHtmlOutputDomxpath(array $params): \DOMXPath
+    {
+        return $this->runActionAndGetHtmlOutputDomxpath('get', function($storage) use ($params) {
+            $action = new \rcmail_action_mail_get();
+            $this->assertTrue($action->checks());
+            $_GET = $params;
+            $action->run();
+        });
+    }
+
     protected function runAndGetHtmlOutputDomxpath(string $msgId): \DOMXPath
+    {
+        return $this->runActionAndGetHtmlOutputDomxpath('preview', function($storage) use ($msgId) {
+            $action = new \rcmail_action_mail_show();
+            $this->assertTrue($action->checks());
+
+            $messagesList = $storage->list_messages();
+
+            // Find the UID of the wanted message.
+            $messageUid = null;
+            foreach ($messagesList as $messageHeaders) {
+                if ($messageHeaders->get('message-id') === "<{$msgId}>") {
+                    $messageUid = $messageHeaders->uid;
+                    break;
+                }
+            }
+            if ($messageUid === null) {
+                throw new \Exception("No message found in messages list with Message-Id '{$msgId}'");
+            }
+
+            $_GET = ['_uid' => $messageUid];
+            $action->run();
+        });
+
+    }
+
+    protected function runActionAndGetHtmlOutputDomxpath(string $urlActionParam, \Closure $callback): \DOMXPath
     {
         $imap_host = getenv('RC_CONFIG_IMAP_HOST') ?: 'tls://localhost:143';
         $rcmail = \rcmail::get_instance();
         // We need to overwrite the storage object, else storage_init() just
         // returns the cached one (which might be a StorageMock instance).
-        $mockStorage = $rcmail->storage = null;
+        $mockStorage = $rcmail->storage;
+        $rcmail->storage = null;
         $rcmail->storage_init();
         // Login our test user so we can fetch messages from the imap server.
         $rcmail->login('test-message-rendering@localhost', 'pass', $imap_host);
@@ -54,34 +91,17 @@ class MessageRenderingTestCase extends ActionTestCase
         $storage->set_options(['all_headers' => true]);
         // We need to set the folder, else no message can be fetched.
         $storage->set_folder('INBOX');
-        $output = $this->initOutput(\rcmail_action::MODE_HTTP, 'mail', 'preview');
-        // TODO: Why do we need to set the skin manually?
-        $output->set_skin('elastic');
 
-        $action = new \rcmail_action_mail_show();
-        $this->assertTrue($action->checks());
-
-        $messagesList = $storage->list_messages();
-
-        // Find the UID of the wanted message.
-        $messageUid = null;
-        foreach ($messagesList as $messageHeaders) {
-            if ($messageHeaders->get('message-id') === "<{$msgId}>") {
-                $messageUid = $messageHeaders->uid;
-                break;
-            }
-        }
-        if ($messageUid === null) {
-            throw new \Exception("No message found in messages list with Message-Id '{$msgId}'");
-        }
+        $this->initOutput(\rcmail_action::MODE_HTTP, 'mail', $urlActionParam);
+        //// TODO: Why do we need to set the skin manually?
+        $rcmail->output->set_skin('elastic');
 
         // Prepare and trigger the rendering.
-        $_GET = ['_uid' => $messageUid];
         $html = '';
         try {
-            $action->run();
+            $callback($storage);
         } catch (ExitException $e) {
-            $html = $output->getOutput();
+            $html = $rcmail->output->getOutput();
         }
 
         // Reset the storage to the mocked one most other tests expect.

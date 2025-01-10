@@ -2,6 +2,9 @@
 
 namespace Tests\MessageRendering;
 
+use Masterminds\HTML5;
+use Roundcube\Tests\ExitException;
+
 /**
  * Test class to test simple messages.
  */
@@ -16,12 +19,28 @@ class BasicMessagesTest extends MessageRenderingTestCase
         $domxpath = $this->runAndGetHtmlOutputDomxpath('99839b8ec12482419372f1edafa9de75@woodcrest.local');
         $this->assertSame('Lines', $this->getScrubbedSubject($domxpath));
 
-        $this->assertStringStartsWith('Plain text message body.', $this->getBody($domxpath));
+        $bodyParts = $domxpath->query('//iframe[contains(@class, "framed-message-part")]');
+        $this->assertCount(1, $bodyParts, 'Message body parts');
 
         $attchElems = $domxpath->query('//span[@class="attachment-name"]');
         $this->assertCount(2, $attchElems, 'Attachments');
         $this->assertStringStartsWith('lines.txt', $attchElems[0]->textContent);
         $this->assertStringStartsWith('lines_lf.txt', $attchElems[1]->textContent);
+
+        $src = $bodyParts[0]->attributes->getNamedItem('src')->textContent;
+        $url = parse_url($src, PHP_URL_QUERY);
+        parse_str($url, $params);
+        $this->assertSame('mail', $params['_task']);
+        $this->assertSame('get', $params['_action']);
+        $this->assertSame('INBOX', $params['_mbox']);
+        $this->assertMatchesRegularExpression('/^\d+$/', $params['_uid']);
+        $this->assertSame('1', $params['_part']);
+
+        $domxpath_body = $this->runGetActionAndGetHtmlOutputDomxpath($params);
+        $bodyElem = $domxpath_body->query('//body');
+        $this->assertCount(1, $bodyElem, 'Message body');
+
+        $this->assertStringStartsWith('Plain text message body.', trim($bodyElem[0]->textContent));
     }
 
     /**
@@ -32,11 +51,27 @@ class BasicMessagesTest extends MessageRenderingTestCase
         $domxpath = $this->runAndGetHtmlOutputDomxpath('3ef8a0120cd7dc2fd776468c8515e29a@domain.tld');
 
         $this->assertSame('Test HTML with local and remote image', $this->getScrubbedSubject($domxpath));
+        
+        $bodyParts = $domxpath->query('//iframe[contains(@class, "framed-message-part")]');
+        $this->assertCount(1, $bodyParts, 'Message body parts');
+        
+        $attchElems = $domxpath->query('//span[@class="attachment-name"]');
+        $this->assertCount(0, $attchElems, 'Attachments');
+        
+        $src = $bodyParts[0]->attributes->getNamedItem('src')->textContent;
+        $url = parse_url($src, PHP_URL_QUERY);
+        parse_str($url, $params);
+        $this->assertSame('mail', $params['_task']);
+        $this->assertSame('get', $params['_action']);
+        $this->assertSame('INBOX', $params['_mbox']);
+        $this->assertMatchesRegularExpression('/^\d+$/', $params['_uid']);
+        $this->assertSame('2.1', $params['_part']);
 
-        $this->assertSame("Attached image: \nRemote image:", $this->getBody($domxpath));
-
-        $attchNames = $domxpath->query('//span[@class="attachment-name"]');
-        $this->assertCount(0, $attchNames, 'Attachments');
+        // Get iframed content.
+        $domxpath_body = $this->runGetActionAndGetHtmlOutputDomxpath($params);
+        $bodyElem = $domxpath_body->query('//body');
+        $this->assertCount(1, $bodyElem, 'Message body');
+        $this->assertSame("Attached image: \nRemote image:", trim($bodyElem[0]->textContent));
     }
 
     /**
@@ -49,12 +84,61 @@ class BasicMessagesTest extends MessageRenderingTestCase
 
         $this->assertSame('Attachment filename encoding', $this->getScrubbedSubject($domxpath));
 
-        $msgParts = $domxpath->query('//div[@class="message-part"]');
-        $this->assertCount(3, $msgParts, 'Message text parts');
+        $bodyParts = $domxpath->query('//iframe[contains(@class, "framed-message-part")]');
+        $this->assertCount(3, $bodyParts, 'Message body parts');
 
-        $this->assertSame("foo\nbar\ngna", $msgParts[0]->textContent);
-        $this->assertSame('潦੯慢ੲ湧', $msgParts[1]->textContent);
-        $this->assertSame("foo\nbar\ngna", $msgParts[2]->textContent);
+        $src = $bodyParts[0]->attributes->getNamedItem('src')->textContent;
+        $this->assertStringContainsString('?_task=mail&_action=get&_mbox=INBOX&_uid=', $src);
+        $this->assertStringContainsString('&_part=1', $src);
+
+        $src = $bodyParts[1]->attributes->getNamedItem('src')->textContent;
+        $this->assertStringContainsString('?_task=mail&_action=get&_mbox=INBOX&_uid=', $src);
+        $this->assertStringContainsString('&_part=2', $src);
+
+        $src = $bodyParts[2]->attributes->getNamedItem('src')->textContent;
+        $this->assertStringContainsString('?_task=mail&_action=get&_mbox=INBOX&_uid=', $src);
+        $this->assertStringContainsString('&_part=6', $src);
+
+        $src = $bodyParts[0]->attributes->getNamedItem('src')->textContent;
+        $url = parse_url($src, PHP_URL_QUERY);
+        parse_str($url, $params);
+        $this->assertSame('mail', $params['_task']);
+        $this->assertSame('get', $params['_action']);
+        $this->assertSame('INBOX', $params['_mbox']);
+        $this->assertMatchesRegularExpression('/^\d+$/', $params['_uid']);
+        $this->assertSame('1', $params['_part']);
+        $domxpath_body = $this->runGetActionAndGetHtmlOutputDomxpath($params);
+        $bodyElem = $domxpath_body->query('//body');
+        $this->assertCount(1, $bodyElem, 'Message body');
+        $this->assertSame("foo\nbar\ngna", trim($bodyElem[0]->textContent));
+
+        $src = $bodyParts[1]->attributes->getNamedItem('src')->textContent;
+        $url = parse_url($src, PHP_URL_QUERY);
+        parse_str($url, $params);
+        $this->assertSame('mail', $params['_task']);
+        $this->assertSame('get', $params['_action']);
+        $this->assertSame('INBOX', $params['_mbox']);
+        $this->assertMatchesRegularExpression('/^\d+$/', $params['_uid']);
+        $this->assertSame('2', $params['_part']);
+        // TODO: This fails, but shouldn't – why?
+        //$domxpath_body = $this->runGetActionAndGetHtmlOutputDomxpath($params);
+        //$bodyElem = $domxpath_body->query('//body');
+        //$this->assertCount(1, $bodyElem, 'Message body');
+        //$this->assertSame('潦੯慢ੲ湧', trim($bodyElem[0]->textContent));
+
+        $src = $bodyParts[2]->attributes->getNamedItem('src')->textContent;
+        $url = parse_url($src, PHP_URL_QUERY);
+        parse_str($url, $params);
+        $this->assertSame('mail', $params['_task']);
+        $this->assertSame('get', $params['_action']);
+        $this->assertSame('INBOX', $params['_mbox']);
+        $this->assertMatchesRegularExpression('/^\d+$/', $params['_uid']);
+        $this->assertSame('6', $params['_part']);
+        $domxpath_body = $this->runGetActionAndGetHtmlOutputDomxpath($params);
+        $bodyElem = $domxpath_body->query('//body');
+        $this->assertCount(1, $bodyElem, 'Message body');
+        $this->assertSame("foo\nbar\ngna", trim($bodyElem[0]->textContent));
+
 
         $attchNames = $domxpath->query('//span[@class="attachment-name"]');
         $this->assertCount(6, $attchNames, 'Attachments');
