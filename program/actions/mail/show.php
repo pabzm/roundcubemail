@@ -707,7 +707,10 @@ class rcmail_action_mail_show extends rcmail_action_mail_index
 
                     $out .= html::div(['class' => 'message-prefix'], $plugin['prefix']);
                     $out .= html::div(
-                        ['id' => $container_id], [
+                        [
+                            'id' => $container_id,
+                            'class' => $container_class,
+                        ], [
                             self::message_loading_notice(),
                             html::iframe([
                                 'sandbox' => 'allow-same-origin',
