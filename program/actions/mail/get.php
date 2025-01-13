@@ -177,8 +177,7 @@ class rcmail_action_mail_get extends rcmail_action_mail_index
                         header('Content-Type: image/gif');
                         header('Content-Transfer-Encoding: binary');
                         header('Content-Length: ' . strlen($content));
-                        $rcmail->output->reset(true);
-                        $rcmail->output->write($content);
+                        echo $content;
                     }
                     // html warning with a button to load the file anyway
                     else {
