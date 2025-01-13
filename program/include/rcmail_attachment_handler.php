@@ -199,7 +199,7 @@ class rcmail_attachment_handler
                 $result = fwrite($fp, $result) !== false;
             }
         } elseif ($this->message) {
-            $result = $this->message->get_part_body($this->part->mime_id, false, 0, $fp);
+            $result = $this->message->get_part_body($this->part->mime_id, ($this->part->ctype_primary === 'text'), 0, $fp);
 
             // check connection status
             if (!$fp && $this->size && empty($result)) {
