@@ -27,7 +27,7 @@ class BasicMessagesTest extends MessageRenderingTestCase
         $this->assertStringStartsWith('lines_lf.txt', $attchElems[1]->textContent);
 
         $shownImages = $domxpath->query('//span[@class="image-filename"]');
-        $this->assertCount(0, $attchNames, 'Shown images');
+        $this->assertCount(0, $shownImages, 'Shown images');
     }
 
     /**
@@ -47,7 +47,7 @@ class BasicMessagesTest extends MessageRenderingTestCase
         $this->assertCount(0, $attchElems, 'Attachments');
 
         $shownImages = $domxpath->query('//span[@class="image-filename"]');
-        $this->assertCount(0, $attchNames, 'Shown images');
+        $this->assertCount(0, $shownImages, 'Shown images');
     }
 
     /**
@@ -80,7 +80,7 @@ class BasicMessagesTest extends MessageRenderingTestCase
         $this->assertSame('very very very very long very very very very long ćććććć very very very long name.txt', $attchNames[5]->textContent);
 
         $shownImages = $domxpath->query('//span[@class="image-filename"]');
-        $this->assertCount(2, $attchNames, 'Shown images');
+        $this->assertCount(2, $shownImages, 'Shown images');
         $this->assertSame('żółć.png', $shownImages[0]->textContent);
         $this->assertSame('żółć.png', $shownImages[1]->textContent);
     }
