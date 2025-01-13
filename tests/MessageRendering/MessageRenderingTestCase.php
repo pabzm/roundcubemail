@@ -40,9 +40,9 @@ class MessageRenderingTestCase extends ActionTestCase
      * to be placed as individual files in
      * `tests/src/emails/test@example/Mail/cur/`.
      */
-    protected function runGetActionAndGetHtmlOutputDomxpath(array $params): \DOMXPath
+    protected function renderIframedBodyContent(array $params): \DOMXPath
     {
-        return $this->runActionAndGetHtmlOutputDomxpath('get', function($storage) use ($params) {
+        return $this->runActionAndGetHtmlOutputDomxpath('get', function ($storage) use ($params) {
             $action = new \rcmail_action_mail_get();
             $this->assertTrue($action->checks());
             $_GET = $params;
@@ -50,9 +50,9 @@ class MessageRenderingTestCase extends ActionTestCase
         });
     }
 
-    protected function runAndGetHtmlOutputDomxpath(string $msgId): \DOMXPath
+    protected function renderMessage(string $msgId): \DOMXPath
     {
-        return $this->runActionAndGetHtmlOutputDomxpath('preview', function($storage) use ($msgId) {
+        return $this->runActionAndGetHtmlOutputDomxpath('preview', function ($storage) use ($msgId) {
             $action = new \rcmail_action_mail_show();
             $this->assertTrue($action->checks());
 
@@ -60,6 +60,7 @@ class MessageRenderingTestCase extends ActionTestCase
 
             // Find the UID of the wanted message.
             $messageUid = null;
+            // TODO: find a method that scales better.
             foreach ($messagesList as $messageHeaders) {
                 if ($messageHeaders->get('message-id') === "<{$msgId}>") {
                     $messageUid = $messageHeaders->uid;
@@ -73,7 +74,6 @@ class MessageRenderingTestCase extends ActionTestCase
             $_GET = ['_uid' => $messageUid];
             $action->run();
         });
-
     }
 
     protected function runActionAndGetHtmlOutputDomxpath(string $urlActionParam, \Closure $callback): \DOMXPath
@@ -93,7 +93,7 @@ class MessageRenderingTestCase extends ActionTestCase
         $storage->set_folder('INBOX');
 
         $this->initOutput(\rcmail_action::MODE_HTTP, 'mail', $urlActionParam);
-        //// TODO: Why do we need to set the skin manually?
+        // TODO: Why do we need to set the skin manually?
         $rcmail->output->set_skin('elastic');
 
         // Prepare and trigger the rendering.
@@ -111,5 +111,21 @@ class MessageRenderingTestCase extends ActionTestCase
         // https://github.com/Masterminds/html5-php/issues/181
         $html5 = new HTML5(['disable_html_ns' => true]);
         return new \DOMXPath($html5->loadHTML($html));
+    }
+
+    protected function getSrcParams(\DOMNode $elem): array
+    {
+        $src = $elem->attributes->getNamedItem('src')->textContent;
+        $url = parse_url($src, \PHP_URL_QUERY);
+        parse_str($url, $params);
+        return $params;
+    }
+
+    protected function getIframedContent(array $params): string
+    {
+        $domxpath_body = $this->renderIframedBodyContent($params);
+        $bodyElem = $domxpath_body->query('//body');
+        $this->assertCount(1, $bodyElem, 'Message body');
+        return $bodyElem[0]->textContent;
     }
 }
